@@ -7,5 +7,5 @@ export function formatDate(inputDateString) {
     day: "numeric"
   };
 
-  return date.toLocaleDateString(undefined, options);
+  return date.toLocaleDateString(options);
 }
