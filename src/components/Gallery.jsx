@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { category, data } from "../data";
-import useDebounce from "../hooks/useDebounce.ts";
-import Filter from "./Filter";
-import Modal from "./Modal";
-import { formatDate } from "../utils.ts";
+import { category, data } from "../data.js";
+import useDebounce from "../hooks/useDebounce.js";
+import Filter from "./Filter.jsx";
+import Modal from "./Modal.jsx";
+import { formatDate } from "../utils.js";
 
 const Gallery = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -198,7 +198,9 @@ const Gallery = () => {
               {modalData?.collectionName}
             </h2>
             <p className="text-sm font-extralight">{modalData?.name}</p>
-            <p className="text-sm">{formatDate(modalData?.createdAt)}</p>
+            <p className="text-sm">
+              {modalData?.createdAt ? formatDate(modalData?.createdAt) : ""}
+            </p>
           </div>
         </div>
       </Modal>
