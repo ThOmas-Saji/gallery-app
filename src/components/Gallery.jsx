@@ -10,20 +10,12 @@ const Gallery = () => {
   const [collection, setCollection] = useState(data);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [modalData, setModalData] = useState("");
-
+  const [sortType, setSortType] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [sortMode, setSortMode] = useState(false);
 
   const debouncedValue = useDebounce(searchTerm, 600);
-
-  const handleSearch = (search) => {
-    // Filter the data based on the search term
-    const filteredData = data?.filter((item) =>
-      item?.collectionName?.toLowerCase()?.includes(search)
-    );
-    setCollection(filteredData);
-  };
 
   const sortByCollectionNameAsc = (a, b) =>
     a.collectionName.localeCompare(b.collectionName);
@@ -33,26 +25,45 @@ const Gallery = () => {
   const sortByCollectionNameDesc = (a, b) =>
     b.collectionName.localeCompare(a.collectionName);
 
-  const handleSortByCollectionName = (order) => {
+  const handleSort = (sortBy) => {
     let sorted = [];
-    if (order === "asc") {
-      sorted = [...data].sort(sortByCollectionNameAsc);
+    if (sortBy?.trim()) {
+      if (sortBy === "date") {
+        sorted = [...collection].sort(sortByCreatedAt);
+      }
+      if (sortBy === "asc") {
+        sorted = [...collection].sort(sortByCollectionNameAsc);
+      }
+      if (sortBy === "desc") {
+        sorted = [...collection].sort(sortByCollectionNameDesc);
+      }
+      setCollection(sorted);
     }
-    if (order === "desc") {
-      sorted = [...data].sort(sortByCollectionNameDesc);
-    }
-    setCollection(sorted);
-    setSortMode(false);
   };
 
-  // Function to handle sorting by createdAt date
-  const handleSortByCreatedAt = () => {
-    const sorted = [...data].sort(sortByCreatedAt);
-    setCollection(sorted);
+  const handleSearch = (search) => {
+    // Filter the data based on the search term
+    let filteredData = data?.filter((item) =>
+      item?.collectionName?.toLowerCase()?.includes(search)
+    );
+    if (selectedCategories?.length) {
+      filteredData = filteredData.filter((item) => {
+        const isFind = selectedCategories?.find(
+          (id) =>
+            item?.categoryId === id ||
+            item?.firstSubcategoryId === id ||
+            item?.secondSubcategoryId === id
+        );
+        if (isFind) {
+          return item;
+        }
+      });
+    }
+    setCollection(filteredData);
   };
 
   const handleFilter = () => {
-    const filteredCollection = data.filter((item) => {
+    let filteredData = data.filter((item) => {
       const isFind = selectedCategories?.find(
         (id) =>
           item?.categoryId === id ||
@@ -63,7 +74,13 @@ const Gallery = () => {
         return item;
       }
     });
-    setCollection(filteredCollection);
+
+    if (searchTerm?.trim()) {
+      filteredData = filteredData?.filter((item) =>
+        item?.collectionName?.toLowerCase()?.includes(searchTerm)
+      );
+    }
+    setCollection(filteredData);
   };
 
   useEffect(() => {
@@ -71,10 +88,14 @@ const Gallery = () => {
   }, [debouncedValue]);
 
   useEffect(() => {
+    handleSort(sortType);
+  }, [sortType]);
+
+  useEffect(() => {
     if (selectedCategories?.length) {
-      setSearchTerm("");
       handleFilter();
     } else {
+      setSearchTerm("");
       setCollection(data);
     }
   }, [selectedCategories]);
@@ -101,31 +122,25 @@ const Gallery = () => {
             {sortMode ? (
               <div className="flex gap-2 flex-wrap">
                 <button
-                  onClick={() => handleSortByCollectionName("asc")}
+                  onClick={() => setSortType("asc")}
                   className="border border-white text-white px-4 py-1 rounded-lg"
                 >
                   Sort By A-Z
                 </button>
                 <button
-                  onClick={() => handleSortByCollectionName("desc")}
+                  onClick={() => setSortType("desc")}
                   className="border border-white text-white px-4 py-1 rounded-lg"
                 >
                   Sort By Z-A
                 </button>
                 <button
-                  onClick={() => {
-                    handleSortByCreatedAt();
-                    setSortMode(false);
-                  }}
+                  onClick={() => setSortType("date")}
                   className="border border-white text-white px-4 py-1 rounded-lg"
                 >
                   Sort By Recently Added
                 </button>
                 <button
-                  onClick={() => {
-                    setSortMode(false);
-                    setCollection(data);
-                  }}
+                  onClick={() => setSortMode(false)}
                   className="border border-white text-xl text-white px-4 py-1 rounded-lg"
                 >
                   X
@@ -143,7 +158,7 @@ const Gallery = () => {
         </div>
         <div className="w-full flex justify-center gap-4 flex-wrap">
           {collection?.length ? (
-            collection.map((item) => {
+            collection?.map((item) => {
               const categoryDetails = category.find(
                 (catgry) => item?.categoryId === catgry?.id
               );
